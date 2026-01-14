@@ -6,6 +6,8 @@ import json
 import time
 import random
 import sys
+import colorama
+from colorama import Fore, Style
 
 # ================= BANNER ================= #
 
@@ -24,11 +26,15 @@ API_URL = "https://anubisdb.com/anubis/subdomains/"
 REQUEST_DELAY = 0.5
 TIMEOUT = 15
 
+# ================= COLOR ================= #
+
+colorama.init(autoreset=True)
+
 # ================= CUSTOM PARSER ================= #
 
 class BannerParser(argparse.ArgumentParser):
     def print_help(self, *args, **kwargs):
-        print(BANNER)
+        print(Fore.CYAN + BANNER + Style.RESET_ALL)
         super().print_help(*args, **kwargs)
 
 # ================= USER AGENT GENERATOR ================= #
@@ -102,16 +108,16 @@ def fetch_subdomains(domain):
             return r.json()
 
         elif r.status_code == 300:
-            print(f"[!] {domain}: Not found in AnubisDB")
+            print(Fore.RED + f"[!] {domain}: Not found in AnubisDB" + Style.RESET_ALL)
 
         elif r.status_code == 403:
-            print(f"[!] {domain}: Invalid domain")
+            print(Fore.RED + f"[!] {domain}: Invalid domain" + Style.RESET_ALL)
 
         else:
-            print(f"[!] {domain}: Server error ({r.status_code})")
+            print(Fore.RED + f"[!] {domain}: Server error ({r.status_code})" + Style.RESET_ALL)
 
     except requests.exceptions.RequestException as e:
-        print(f"[!] {domain}: Request failed -> {e}")
+        print(Fore.RED + f"[!] {domain}: Request failed -> {e}" + Style.RESET_ALL)
 
     return []
 
@@ -140,8 +146,8 @@ def main():
         description="AnubisDB Subdomain Enumerator with Random UA Rotation",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog="""Examples:
-  python3 anubis_enum.py -d example.com
-  python3 anubis_enum.py -f domains.txt -o results --format json
+  python3 anubis_enum1.py -d example.com
+  python3 anubis_enum1.py -f domains.txt -o results --format json
 """
     )
 
@@ -152,8 +158,8 @@ def main():
 
     args = parser.parse_args()
 
-    # Print banner on normal execution
-    print(BANNER)
+    # Banner at start
+    print(Fore.CYAN + BANNER + Style.RESET_ALL)
 
     domains = []
 
@@ -165,7 +171,7 @@ def main():
             with open(args.file, "r") as f:
                 domains.extend(line.strip() for line in f if line.strip())
         except FileNotFoundError:
-            print("[!] Domain file not found")
+            print(Fore.RED + "[!] Domain file not found" + Style.RESET_ALL)
             sys.exit(1)
 
     if not domains:
@@ -175,7 +181,7 @@ def main():
     results = {}
 
     for domain in domains:
-        print(f"[*] Fetching subdomains for: {domain}")
+        print(Fore.YELLOW + f"[*] Fetching subdomains for: {domain}" + Style.RESET_ALL)
         subs = fetch_subdomains(domain)
         if subs:
             results[domain] = sorted(set(subs))
@@ -186,7 +192,7 @@ def main():
     else:
         save_json(results, args.output + ".json")
 
-    print(f"[+] Done. Output saved to {args.output}.{args.format}")
+    print(Fore.GREEN + f"[+] Done. Output saved to {args.output}.{args.format}" + Style.RESET_ALL)
 
 if __name__ == "__main__":
     main()
